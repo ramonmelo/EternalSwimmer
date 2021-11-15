@@ -10,11 +10,16 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float Speed;
 
+    [SerializeField]
+    private Animator Animator;
+
     private Vector3 _direction = Vector3.zero;
     Vector3 _lastDir = Vector3.zero;
 
     private Rigidbody _rb;
     private Transform _movingTransform;
+    private float _animationState = 0;
+    private float _animationStateTarget = 0;
 
     private void Awake()
     {
@@ -36,7 +41,12 @@ public class PlayerController : MonoBehaviour
             Move();
         }
 
+        // Update Visual Rotation
         Visuals.rotation = Quaternion.LookRotation(Vector3.forward, _lastDir);
+
+        // Update Animation
+        _animationState = Mathf.MoveTowards(_animationState, _animationStateTarget, Time.deltaTime * 10f);
+        Animator.SetFloat("SwimmingState", _animationState);
     }
 
     private void LateUpdate()
@@ -57,7 +67,14 @@ public class PlayerController : MonoBehaviour
         if (_direction != Vector3.zero)
         {
             _lastDir = _direction;
+            _animationStateTarget = 1;
+
+            // Ignore until is zero again
             return;
+        }
+        else
+        {
+            _animationStateTarget = 0;
         }
 
         if (Input.GetKeyDown(KeyCode.UpArrow))
