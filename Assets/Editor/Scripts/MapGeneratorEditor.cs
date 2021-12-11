@@ -53,5 +53,10 @@ public class MapGeneratorEditor : Editor
         {
             (target as MapGenerator).Generate();
         }
+
+        if (GUILayout.Button("Clean Map"))
+        {
+            (target as MapGenerator).CleanLevels();
+        }
     }
 }

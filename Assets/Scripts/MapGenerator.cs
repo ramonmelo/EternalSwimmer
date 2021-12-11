@@ -10,7 +10,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private GameObject PrefabBlock;
     [SerializeField] private GameObject PrefabVisited;
 
-    [SerializeField] private Transform LevelContainer;
+    [SerializeField] private Transform[] LevelContainers;
 
     [SerializeField] private Vector2 ForwardChance;
     [SerializeField] private Vector2 TurnChance;
@@ -21,47 +21,72 @@ public class MapGenerator : MonoBehaviour
     private Vector2 HorizontalLimits = new Vector2(-4, 4);
     private Vector2 VerticalLimits = new Vector2(1, 18);
 
+    public void CleanLevels()
+    {
+        // Clean UP
+        foreach (var level in LevelContainers)
+        {
+            var tempArray = new GameObject[level.transform.childCount];
+
+            for (int i = 0; i < tempArray.Length; i++)
+            {
+                tempArray[i] = level.transform.GetChild(i).gameObject;
+            }
+
+            foreach (var child in tempArray)
+            {
+                DestroyImmediate(child);
+            }
+        }
+    }
+
     public void Generate()
     {
         Debug.Log("Generating...");
 
-        // Clean UP
-        var tempArray = new GameObject[LevelContainer.transform.childCount];
-
-        for (int i = 0; i < tempArray.Length; i++)
-        {
-            tempArray[i] = LevelContainer.transform.GetChild(i).gameObject;
-        }
-
-        foreach (var child in tempArray)
-        {
-            DestroyImmediate(child);
-        }
+        // Clean
+        CleanLevels();
 
         // Generate
+        Node endNode = null;
 
-        var (startNode, endNode) = GenerateEndPoints();
+        foreach (var level in LevelContainers)
+        {
+            Node startNode;
+            (startNode, endNode) = GenerateEndPoints(endNode);
 
-        PlotNode(startNode, PrefabPlayerEnter);
-        PlotNode(endNode, PrefabPlayerExit);
+            PlotNode(startNode, PrefabPlayerEnter, level);
+            PlotNode(endNode, PrefabPlayerExit, level);
 
-        var obstacles = GenerateObstacles(TotalObstacles);
+            var obstacles = GenerateObstacles(TotalObstacles, level);
 
-        var newEndNode = FindPath(startNode, endNode, obstacles);
+            var newEndNode = FindPath(startNode, endNode, obstacles, level);
+        }
     }
 
-    private (Node, Node) GenerateEndPoints()
+    private (Node, Node) GenerateEndPoints(Node oldEnd)
     {
-        var startX = Random.Range(Mathf.RoundToInt(HorizontalLimits.x), Mathf.RoundToInt(HorizontalLimits.y));
-        var startY = 1;
+        // Generate Start Node
 
-        var startNode = new Node(null, new Vector2(startX, startY));
+        Node startNode;
+        if (oldEnd == null)
+        {
+            var startY = Random.Range(Mathf.RoundToInt(VerticalLimits.x), Mathf.RoundToInt(VerticalLimits.y));
+            var startX = HorizontalLimits.x;
 
+            startNode = new Node(null, new Vector2(startX, startY));
+        }
+        else
+        {
+            startNode = oldEnd.Clone();
+        }
+
+        // Generate End Node
         Node endNode;
         do
         {
             var endY = Random.Range(Mathf.RoundToInt(VerticalLimits.x), Mathf.RoundToInt(VerticalLimits.y));
-            var endX = Random.value > 0.5f ? HorizontalLimits.x : HorizontalLimits.y;
+            var endX = HorizontalLimits.y;
 
             endNode = new Node(null, new Vector2(endX, endY));
 
@@ -70,7 +95,7 @@ public class MapGenerator : MonoBehaviour
         return (startNode, endNode);
     }
 
-    private List<Node> GenerateObstacles(int total)
+    private List<Node> GenerateObstacles(int total, Transform level)
     {
         var obstacles = new List<Node>();
 
@@ -85,14 +110,14 @@ public class MapGenerator : MonoBehaviour
             {
                 obstacles.Add(obstacle);
 
-                PlotNode(obstacle, PrefabBlock);
+                PlotNode(obstacle, PrefabBlock, level);
             }
         }
 
         return obstacles;
     }
 
-    private Node FindPath(Node start, Node end, List<Node> obstables)
+    private Node FindPath(Node start, Node end, List<Node> obstables, Transform level)
     {
         var searchNodes = new List<Node>();
 
@@ -118,7 +143,7 @@ public class MapGenerator : MonoBehaviour
 
             searchNodes.Remove(currentNode);
 
-            PlotNode(currentNode, PrefabVisited);
+            PlotNode(currentNode, PrefabVisited, level);
 
             foreach (var neighboor in currentNode.Neighboors())
             {
@@ -150,14 +175,15 @@ public class MapGenerator : MonoBehaviour
         return null;
     }
 
-    private void PlotNode(Node node, GameObject prefab)
+    private void PlotNode(Node node, GameObject prefab, Transform level)
     {
         var item = Instantiate(prefab);
 
-        Debug.Log(node.Position);
-
+        item.transform.SetParent(level);
         item.transform.localPosition = node.Position;
-        item.transform.SetParent(LevelContainer);
+
+        Debug.Log(item.transform.localPosition);
+        Debug.Log(item.transform.position);
     }
 
     public class Node
@@ -214,6 +240,11 @@ public class MapGenerator : MonoBehaviour
             }
 
             return false;
+        }
+
+        public Node Clone()
+        {
+            return new Node(null, this.Position);
         }
 
         public override string ToString()
