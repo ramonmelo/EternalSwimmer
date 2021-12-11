@@ -42,8 +42,6 @@ public class MapGenerator : MonoBehaviour
 
     public void Generate()
     {
-        Debug.Log("Generating...");
-
         // Clean
         CleanLevels();
 
@@ -58,9 +56,18 @@ public class MapGenerator : MonoBehaviour
             PlotNode(startNode, PrefabPlayerEnter, level);
             PlotNode(endNode, PrefabPlayerExit, level);
 
-            var obstacles = GenerateObstacles(TotalObstacles, level);
-
+            var obstacles = GenerateObstacles(startNode, endNode, TotalObstacles, level);
             var newEndNode = FindPath(startNode, endNode, obstacles, level);
+
+            if (newEndNode != null)
+            {
+                var current = newEndNode;
+                while (current.Parent != null)
+                {
+                    PlotNode(current, PrefabVisited, level);
+                    current = current.Parent;
+                }
+            }
         }
     }
 
@@ -69,17 +76,10 @@ public class MapGenerator : MonoBehaviour
         // Generate Start Node
 
         Node startNode;
-        if (oldEnd == null)
-        {
-            var startY = Random.Range(Mathf.RoundToInt(VerticalLimits.x), Mathf.RoundToInt(VerticalLimits.y));
-            var startX = HorizontalLimits.x;
+        var startY = oldEnd != null ? oldEnd.Position.y : Random.Range(Mathf.RoundToInt(VerticalLimits.x), Mathf.RoundToInt(VerticalLimits.y));
+        var startX = HorizontalLimits.x;
 
-            startNode = new Node(null, new Vector2(startX, startY));
-        }
-        else
-        {
-            startNode = oldEnd.Clone();
-        }
+        startNode = new Node(null, new Vector2(startX, startY));
 
         // Generate End Node
         Node endNode;
@@ -95,7 +95,7 @@ public class MapGenerator : MonoBehaviour
         return (startNode, endNode);
     }
 
-    private List<Node> GenerateObstacles(int total, Transform level)
+    private List<Node> GenerateObstacles(Node startNode, Node endNode, int total, Transform level)
     {
         var obstacles = new List<Node>();
 
@@ -106,7 +106,7 @@ public class MapGenerator : MonoBehaviour
 
             var obstacle = new Node(null, new Vector2(x, y));
 
-            if (obstacles.Contains(obstacle) == false)
+            if (obstacles.Contains(obstacle) == false && obstacle.Distance(startNode) > 3 && obstacle.Distance(endNode) > 3)
             {
                 obstacles.Add(obstacle);
 
@@ -138,12 +138,10 @@ public class MapGenerator : MonoBehaviour
 
             if (currentNode.Equals(end))
             {
-                return end;
+                return currentNode;
             }
 
             searchNodes.Remove(currentNode);
-
-            PlotNode(currentNode, PrefabVisited, level);
 
             foreach (var neighboor in currentNode.Neighboors())
             {
@@ -181,9 +179,6 @@ public class MapGenerator : MonoBehaviour
 
         item.transform.SetParent(level);
         item.transform.localPosition = node.Position;
-
-        Debug.Log(item.transform.localPosition);
-        Debug.Log(item.transform.position);
     }
 
     public class Node
