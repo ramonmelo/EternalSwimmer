@@ -200,11 +200,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08c6206e238aeaf45bff95f7190b3724, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BlockPrefab: {fileID: 4622782972673133629, guid: 92e94540ffec44d419183c02d705500a, type: 3}
-  MoverPrefab: {fileID: 5394395701130133813, guid: add1a66c2a48fcc478238d3b6ec1b09b, type: 3}
+  PrefabPlayerEnter: {fileID: 5394395701130133813, guid: c79315cef602a92479a411449bbc9434, type: 3}
+  PrefabPlayerExit: {fileID: 5394395701130133813, guid: add1a66c2a48fcc478238d3b6ec1b09b, type: 3}
+  PrefabPoint: {fileID: 8533374415933547236, guid: 923a34682348c8842ada82fd5e485302, type: 3}
+  PrefabBlock: {fileID: 4622782972673133629, guid: 92e94540ffec44d419183c02d705500a, type: 3}
+  PrefabVisited: {fileID: 399429021507987195, guid: a6af8bb0ff8944943b96ca747e570656, type: 3}
   LevelContainer: {fileID: 7071720151367226519}
-  ForwardChance: {x: 0, y: 0.80366975}
-  TurnChance: {x: 0.80366975, y: 1}
+  ForwardChance: {x: 0, y: 0.5}
+  TurnChance: {x: 0.5, y: 0.9}
+  TerminateChance: {x: 0.9, y: 1}
 --- !u!1 &7816323460107530141
 GameObject:
   m_ObjectHideFlags: 0
@@ -223,7 +227,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7816323460107530130
 Transform:
   m_ObjectHideFlags: 0
@@ -266,7 +270,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3b3b5fc58ad0da34e8c6df4d5a51b035, type: 2}
+  - {fileID: 2100000, guid: 59a1ba0e645041a4a9d2e0ea6692b746, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

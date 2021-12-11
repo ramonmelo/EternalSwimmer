@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5394395701130133818}
   - component: {fileID: 914386760}
   m_Layer: 0
-  m_Name: Mover
+  m_Name: PlayerExit
   m_TagString: Mover
   m_Icon: {fileID: 2488908585195742037, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
