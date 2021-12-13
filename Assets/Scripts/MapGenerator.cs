@@ -10,45 +10,42 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private GameObject PrefabBlock;
     [SerializeField] private GameObject PrefabVisited;
 
-    [SerializeField] private Transform[] LevelContainers;
+    [SerializeField] private Transform LevelContainer;
 
     [SerializeField] private Vector2 ForwardChance;
     [SerializeField] private Vector2 TurnChance;
     [SerializeField] private Vector2 TerminateChance;
 
     [SerializeField] private int TotalObstacles = 10;
+    [SerializeField, Range(1, 12)] private int NumberOfSubLevels = 1;
 
     private Vector2 HorizontalLimits = new Vector2(-4, 4);
     private Vector2 VerticalLimits = new Vector2(1, 18);
+    private Transform[] Levels;
 
     public void CleanLevels()
     {
-        // Clean UP
-        foreach (var level in LevelContainers)
+        var tempArray = new GameObject[LevelContainer.childCount];
+
+        for (int i = 0; i < tempArray.Length; i++)
         {
-            var tempArray = new GameObject[level.transform.childCount];
+            tempArray[i] = LevelContainer.GetChild(i).gameObject;
+        }
 
-            for (int i = 0; i < tempArray.Length; i++)
-            {
-                tempArray[i] = level.transform.GetChild(i).gameObject;
-            }
-
-            foreach (var child in tempArray)
-            {
-                DestroyImmediate(child);
-            }
+        foreach (var child in tempArray)
+        {
+            DestroyImmediate(child);
         }
     }
 
     public void Generate()
     {
-        // Clean
-        CleanLevels();
+        SetupLevels();
 
         // Generate
         Node endNode = null;
 
-        foreach (var level in LevelContainers)
+        foreach (var level in Levels)
         {
             Node startNode;
             (startNode, endNode) = GenerateEndPoints(endNode);
@@ -68,6 +65,31 @@ public class MapGenerator : MonoBehaviour
                     current = current.Parent;
                 }
             }
+        }
+    }
+
+    private void SetupLevels()
+    {
+        CleanLevels();
+
+        Levels = new Transform[NumberOfSubLevels];
+
+        var diff = 20;
+
+        for (int i = 0; i < NumberOfSubLevels; i++)
+        {
+            var level = new GameObject($"Level_{i}");
+            var levelContainer = new GameObject($"Level_Container_{i}");
+
+            level.transform.SetParent(LevelContainer);
+            level.transform.localPosition = new Vector3(0, 0, diff);
+            level.transform.localRotation = Quaternion.AngleAxis(-30 * i, Vector3.up);
+
+            levelContainer.transform.SetParent(level.transform);
+            levelContainer.transform.localPosition = new Vector3(0, 0, -diff);
+            levelContainer.transform.localRotation = Quaternion.identity;
+
+            Levels[i] = levelContainer.transform;
         }
     }
 
@@ -98,8 +120,9 @@ public class MapGenerator : MonoBehaviour
     private List<Node> GenerateObstacles(Node startNode, Node endNode, int total, Transform level)
     {
         var obstacles = new List<Node>();
+        var attempts = 5;
 
-        while (obstacles.Count < total)
+        while (obstacles.Count < total && attempts > 0)
         {
             var x = Random.Range(Mathf.RoundToInt(HorizontalLimits.x), Mathf.RoundToInt(HorizontalLimits.y));
             var y = Random.Range(Mathf.RoundToInt(VerticalLimits.x), Mathf.RoundToInt(VerticalLimits.y));
@@ -109,8 +132,13 @@ public class MapGenerator : MonoBehaviour
             if (obstacles.Contains(obstacle) == false && obstacle.Distance(startNode) > 3 && obstacle.Distance(endNode) > 3)
             {
                 obstacles.Add(obstacle);
+                attempts = 5;
 
                 PlotNode(obstacle, PrefabBlock, level);
+            }
+            else
+            {
+                attempts--;
             }
         }
 
@@ -179,6 +207,7 @@ public class MapGenerator : MonoBehaviour
 
         item.transform.SetParent(level);
         item.transform.localPosition = node.Position;
+        item.transform.localRotation = level.localRotation;
     }
 
     public class Node
