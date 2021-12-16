@@ -47,8 +47,11 @@ public class MapGenerator : MonoBehaviour {
       PlotNode(startNode, PrefabPlayerEnter, level);
       PlotNode(endNode, PrefabPlayerExit, level);
 
-      var obstacles = GenerateObstacles(startNode, endNode, TotalObstacles, level);
-      // var obstacles = new List<Node>();
+      var obstacles = new List<Node>();
+
+      GenerateWalls(obstacles, startNode, endNode, level);
+      GenerateObstacles(obstacles, startNode, endNode, TotalObstacles, level);
+
       var newEndNode = FindPath(startNode, endNode, obstacles, level);
 
       if (newEndNode != null) {
@@ -73,6 +76,8 @@ public class MapGenerator : MonoBehaviour {
 
           current = current.Parent;
         }
+
+        GenerateWalls(obstacles, startNode, endNode, level);
       }
     }
   }
@@ -132,30 +137,65 @@ public class MapGenerator : MonoBehaviour {
     return (startNode, endNode);
   }
 
-  private List<Node> GenerateObstacles(Node startNode, Node endNode, int total, Transform level) {
-    var obstacles = new List<Node>();
-    var attempts = 5;
+  private void GenerateObstacles(List<Node> obstacles, Node startNode, Node endNode, int total, Transform level) {
+    var attempts = 10;
 
-    while (obstacles.Count < total && attempts > 0) {
+    var startCount = obstacles.Count;
+
+    while (obstacles.Count < (total + startCount) && attempts > 0) {
       var x = Random.Range(Mathf.RoundToInt(HorizontalLimits.x), Mathf.RoundToInt(HorizontalLimits.y));
       var y = Random.Range(Mathf.RoundToInt(VerticalLimits.x), Mathf.RoundToInt(VerticalLimits.y));
 
       var obstacle = new Node(null, new Vector2(x, y));
 
-      if (obstacles.Contains(obstacle) == false && obstacle.Distance(startNode) > 3 && obstacle.Distance(endNode) > 3) {
+      if (obstacles.Contains(obstacle) == false && obstacle.Distance(startNode) > 2 && obstacle.Distance(endNode) > 2) {
         obstacles.Add(obstacle);
-        attempts = 5;
 
         PlotNode(obstacle, PrefabBlock, level);
       } else {
         attempts--;
       }
     }
-
-    return obstacles;
   }
 
-  private Node FindPath(Node start, Node end, List<Node> obstables, Transform level) {
+  private void GenerateWalls(List<Node> obstacles, Node startNode, Node endNode, Transform level) {
+
+    var passageEnter = new Node(null, startNode.Position + Vector2.left);
+    var passageExit = new Node(null, endNode.Position + Vector2.right);
+
+    for (int i = Mathf.RoundToInt(VerticalLimits.x); i <= Mathf.RoundToInt(VerticalLimits.y); i++) {
+
+      var obstacleLeft = new Node(null, new Vector2(Mathf.RoundToInt(HorizontalLimits.x) - 1, i));
+
+      if (obstacleLeft.Equals(passageEnter) == false) {
+
+        PlotNode(obstacleLeft, PrefabBlock, level);
+        obstacles.Add(obstacleLeft);
+      }
+
+      var obstacleRight = new Node(null, new Vector2(Mathf.RoundToInt(HorizontalLimits.y) + 1, i));
+
+      if (obstacleRight.Equals(passageExit) == false) {
+
+        PlotNode(obstacleRight, PrefabBlock, level);
+        obstacles.Add(obstacleRight);
+      }
+    }
+
+    for (int i = Mathf.RoundToInt(HorizontalLimits.x) - 1; i <= Mathf.RoundToInt(HorizontalLimits.y) + 1; i++) {
+
+      var obstacleTop = new Node(null, new Vector2(i, Mathf.RoundToInt(VerticalLimits.y) + 1));
+      var obstacleBottom = new Node(null, new Vector2(i, Mathf.RoundToInt(VerticalLimits.x) - 1));
+
+      PlotNode(obstacleTop, PrefabBlock, level);
+      PlotNode(obstacleBottom, PrefabBlock, level);
+
+      obstacles.Add(obstacleTop);
+      obstacles.Add(obstacleBottom);
+    }
+  }
+
+  private Node FindPath(Node start, Node end, List<Node> obstacles, Transform level) {
     var searchNodes = new List<Node>();
 
     start.GScore = 0;
@@ -181,7 +221,7 @@ public class MapGenerator : MonoBehaviour {
           continue;
         }
 
-        if (obstables.Contains(neighboor)) {
+        if (obstacles.Contains(neighboor)) {
           continue;
         }
 
