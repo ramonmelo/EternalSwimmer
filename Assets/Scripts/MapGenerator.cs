@@ -8,19 +8,18 @@ public class MapGenerator : MonoBehaviour {
   [SerializeField] private GameObject PrefabPoint;
   [SerializeField] private GameObject PrefabBlock;
   [SerializeField] private GameObject PrefabVisited;
-
   [SerializeField] private Transform LevelContainer;
-
-  [SerializeField] private Vector2 ForwardChance;
-  [SerializeField] private Vector2 TurnChance;
-  [SerializeField] private Vector2 TerminateChance;
-
-  [SerializeField] private int TotalObstacles = 10;
+  [SerializeField, Range(1, 25)] private int TotalObstacles = 10;
   [SerializeField, Range(1, 12)] private int NumberOfSubLevels = 1;
 
   private Vector2 HorizontalLimits = new Vector2(-4, 4);
   private Vector2 VerticalLimits = new Vector2(1, 18);
   private Transform[] Levels;
+
+  public void Setup(int numberOfObstacles, int numberOfLevels) {
+    this.TotalObstacles = Mathf.Clamp(numberOfObstacles, 1, 25);
+    this.NumberOfSubLevels = Mathf.Clamp(numberOfLevels, 1, 12);
+  }
 
   public void CleanLevels() {
     var tempArray = new GameObject[LevelContainer.childCount];
