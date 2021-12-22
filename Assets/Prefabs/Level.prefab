@@ -97,5 +97,5 @@ MonoBehaviour:
   ForwardChance: {x: 0, y: 0.5}
   TurnChance: {x: 0.5, y: 0.9}
   TerminateChance: {x: 0.9, y: 1}
-  TotalObstacles: 25
-  NumberOfSubLevels: 2
+  TotalObstacles: 1
+  NumberOfSubLevels: 1
