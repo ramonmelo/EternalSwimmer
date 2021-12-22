@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class MoverController : MonoBehaviour {
-  [SerializeField]
-  private LevelManager LevelManager;
 
+  private LevelManager _levelManager;
   private PlayerController _player;
 
+  public void Setup(LevelManager levelManager) {
+    this._levelManager = levelManager;
+  }
+
   private void Update() {
-    if (_player != null && LevelManager.IsMoving == false) {
+    if (_player != null && _levelManager.IsMoving == false) {
       _player.Unlock();
       _player = null;
     }
@@ -20,9 +23,9 @@ public class MoverController : MonoBehaviour {
       var pos = Camera.main.WorldToScreenPoint(transform.position);
 
       if (pos.x < Screen.width / 2) {
-        LevelManager.RotateRight();
+        _levelManager.RotateRight();
       } else {
-        LevelManager.RotateLeft();
+        _levelManager.RotateLeft();
       }
 
       _player = other.gameObject.GetComponent<PlayerController>();

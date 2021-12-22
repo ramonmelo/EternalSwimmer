@@ -15,7 +15,7 @@ public class LevelManager : MonoBehaviour {
   private float _timeCount = 0;
   private int _targetRotationAngle;
 
-  private const int ROTATE_AMOUNT = 90;
+  private const int ROTATE_AMOUNT = 360 / 12;
 
   void Update() {
     if (_moving) {

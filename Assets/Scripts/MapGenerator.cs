@@ -16,6 +16,14 @@ public class MapGenerator : MonoBehaviour {
   private Vector2 VerticalLimits = new Vector2(1, 18);
   private Transform[] Levels;
 
+  public Node StartingPoint { get; private set; } = null;
+
+  public LevelManager _levelManager;
+
+  void Awake() {
+    _levelManager = GetComponentInParent<LevelManager>();
+  }
+
   public void Setup(int numberOfObstacles, int numberOfLevels) {
     this.TotalObstacles = Mathf.Clamp(numberOfObstacles, 1, 25);
     this.NumberOfSubLevels = Mathf.Clamp(numberOfLevels, 1, 12);
@@ -31,9 +39,11 @@ public class MapGenerator : MonoBehaviour {
     foreach (var child in tempArray) {
       DestroyImmediate(child);
     }
+
+    StartingPoint = null;
   }
 
-  public void Generate() {
+  public bool Generate() {
     SetupLevels();
 
     // Generate
@@ -43,8 +53,12 @@ public class MapGenerator : MonoBehaviour {
       Node startNode;
       (startNode, endNode) = GenerateEndPoints(endNode);
 
+      if (StartingPoint == null) {
+        StartingPoint = startNode;
+      }
+
       PlotNode(startNode, PrefabPlayerEnter, level);
-      PlotNode(endNode, PrefabPlayerExit, level);
+      PlotNode(endNode, PrefabPlayerExit, level).GetComponent<MoverController>().Setup(_levelManager);
 
       var obstacles = new List<Node>();
 
@@ -54,6 +68,7 @@ public class MapGenerator : MonoBehaviour {
       var newEndNode = FindPath(startNode, endNode, obstacles, level);
 
       if (newEndNode != null) {
+
         var current = newEndNode;
         while (current != null) {
           // PlotNode(current, PrefabVisited, level);
@@ -75,10 +90,12 @@ public class MapGenerator : MonoBehaviour {
 
           current = current.Parent;
         }
-
-        GenerateWalls(obstacles, startNode, endNode, level);
+      } else {
+        return false;
       }
     }
+
+    return true;
   }
 
   private Vector2 GetMoveVector(Node node) {
@@ -240,12 +257,14 @@ public class MapGenerator : MonoBehaviour {
     return null;
   }
 
-  private void PlotNode(Node node, GameObject prefab, Transform level) {
+  private GameObject PlotNode(Node node, GameObject prefab, Transform level) {
     var item = Instantiate(prefab);
 
     item.transform.SetParent(level);
     item.transform.localPosition = node.Position;
     item.transform.localRotation = level.localRotation;
+
+    return item;
   }
 
   public class Node {
