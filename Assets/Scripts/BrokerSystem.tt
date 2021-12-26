@@ -1,0 +1,29 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#
+	var events = new List<string>();
+	events.Add("StartGame");
+#>
+using System;
+using UnityEngine;
+
+public static class BrokerSystem {
+
+	<# foreach(var item in events) { #>
+
+	public static event Action On<#=item#>;
+	<# } #>
+
+	<# foreach(var item in events) { #>
+
+	public static void <#=item#>() {
+		Debug.Log($"Running: {nameof(<#=item#>)}");
+		On<#=item#>?.Invoke();
+	}
+	<# } #>
+
+}
