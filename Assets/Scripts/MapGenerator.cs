@@ -44,14 +44,14 @@ public class MapGenerator : MonoBehaviour {
   }
 
   public bool Generate() {
-    SetupLevels();
+    Levels = SetupLevels(NumberOfSubLevels, LevelContainer);
 
     // Generate
     Node endNode = null;
 
     foreach (var level in Levels) {
       Node startNode;
-      (startNode, endNode) = GenerateEndPoints(endNode);
+      (startNode, endNode) = GenerateEndPoints(HorizontalLimits, VerticalLimits, endNode);
 
       if (StartingPoint == null) {
         StartingPoint = startNode;
@@ -63,7 +63,7 @@ public class MapGenerator : MonoBehaviour {
       var obstacles = new List<Node>();
 
       GenerateWalls(obstacles, startNode, endNode, level);
-      GenerateObstacles(obstacles, startNode, endNode, TotalObstacles, level);
+      GenerateObstacles(obstacles, startNode, endNode, TotalObstacles, level, HorizontalLimits, VerticalLimits);
 
       var newEndNode = FindPath(startNode, endNode, obstacles, level);
 
@@ -108,18 +108,21 @@ public class MapGenerator : MonoBehaviour {
     return Vector2.right.normalized;
   }
 
-  private void SetupLevels() {
+  /// <summary>
+  /// Create all sub-levels
+  /// </summary>
+  private Transform[] SetupLevels(int numberOfLevels, Transform parentContainer) {
     CleanLevels();
 
-    Levels = new Transform[NumberOfSubLevels];
+    var levels = new Transform[numberOfLevels];
 
     var diff = 20;
 
-    for (int i = 0; i < NumberOfSubLevels; i++) {
+    for (int i = 0; i < numberOfLevels; i++) {
       var level = new GameObject($"Level_{i}");
       var levelContainer = new GameObject($"Level_Container_{i}");
 
-      level.transform.SetParent(LevelContainer);
+      level.transform.SetParent(parentContainer);
       level.transform.localPosition = new Vector3(0, 0, diff);
       level.transform.localRotation = Quaternion.AngleAxis(-30 * i, Vector3.up);
 
@@ -127,24 +130,33 @@ public class MapGenerator : MonoBehaviour {
       levelContainer.transform.localPosition = new Vector3(0, 0, -diff);
       levelContainer.transform.localRotation = Quaternion.identity;
 
-      Levels[i] = levelContainer.transform;
+      levels[i] = levelContainer.transform;
     }
+
+    return levels;
   }
 
-  private (Node, Node) GenerateEndPoints(Node oldEnd) {
+  /// <summary>
+  /// Create at random a new Start and End position for the path.
+  /// If an old End Node is not null, the Start Position will keep the X position in order to maintain 
+  /// continuity of the path
+  /// </summary>
+  /// <param name="oldEnd">Optional old End Node used to create the next Start Position</param>
+  /// <returns>Tuple with the Start and End Position Node references</returns>
+  private (Node, Node) GenerateEndPoints(Vector2 horizontalLimits, Vector2 verticalLimits, Node oldEnd = null) {
     // Generate Start Node
 
     Node startNode;
-    var startY = oldEnd != null ? oldEnd.Position.y : Random.Range(Mathf.RoundToInt(VerticalLimits.x), Mathf.RoundToInt(VerticalLimits.y));
-    var startX = HorizontalLimits.x;
+    var startY = oldEnd != null ? oldEnd.Position.y : Random.Range(Mathf.RoundToInt(verticalLimits.x), Mathf.RoundToInt(verticalLimits.y));
+    var startX = horizontalLimits.x;
 
     startNode = new Node(null, new Vector2(startX, startY));
 
     // Generate End Node
     Node endNode;
     do {
-      var endY = Random.Range(Mathf.RoundToInt(VerticalLimits.x), Mathf.RoundToInt(VerticalLimits.y));
-      var endX = HorizontalLimits.y;
+      var endY = Random.Range(Mathf.RoundToInt(verticalLimits.x), Mathf.RoundToInt(verticalLimits.y));
+      var endX = horizontalLimits.y;
 
       endNode = new Node(null, new Vector2(endX, endY));
 
@@ -153,14 +165,22 @@ public class MapGenerator : MonoBehaviour {
     return (startNode, endNode);
   }
 
-  private void GenerateObstacles(List<Node> obstacles, Node startNode, Node endNode, int total, Transform level) {
+  /// <summary>
+  /// Create obstacles randomly scattered around the level
+  /// </summary>
+  /// <param name="obstacles">Current list of obstacles</param>
+  /// <param name="startNode">Start position</param>
+  /// <param name="endNode">End position</param>
+  /// <param name="total">Max number of obstacles to be created</param>
+  /// <param name="level">Parent level</param>
+  private void GenerateObstacles(List<Node> obstacles, Node startNode, Node endNode, int total, Transform level, Vector2 horizontalLimits, Vector2 verticalLimits) {
     var attempts = 10;
 
     var startCount = obstacles.Count;
 
     while (obstacles.Count < (total + startCount) && attempts > 0) {
-      var x = Random.Range(Mathf.RoundToInt(HorizontalLimits.x), Mathf.RoundToInt(HorizontalLimits.y));
-      var y = Random.Range(Mathf.RoundToInt(VerticalLimits.x), Mathf.RoundToInt(VerticalLimits.y));
+      var x = Random.Range(Mathf.RoundToInt(horizontalLimits.x), Mathf.RoundToInt(horizontalLimits.y));
+      var y = Random.Range(Mathf.RoundToInt(verticalLimits.x), Mathf.RoundToInt(verticalLimits.y));
 
       var obstacle = new Node(null, new Vector2(x, y));
 
@@ -174,6 +194,13 @@ public class MapGenerator : MonoBehaviour {
     }
   }
 
+  /// <summary>
+  /// Create all obstacles around one sub-level considering the start and end positions
+  /// </summary>
+  /// <param name="obstacles">Current list of obstacles</param>
+  /// <param name="startNode">Start position</param>
+  /// <param name="endNode">End position</param>
+  /// <param name="level">Parent level</param>
   private void GenerateWalls(List<Node> obstacles, Node startNode, Node endNode, Transform level) {
 
     var passageEnter = new Node(null, startNode.Position + Vector2.left);
@@ -211,6 +238,15 @@ public class MapGenerator : MonoBehaviour {
     }
   }
 
+  /// <summary>
+  /// Find a valid path between the start and end nodes considering the list of obstacles
+  /// This is an implementation of the A* Algorithm
+  /// </summary>
+  /// <param name="start">Start position</param>
+  /// <param name="end">End position</param>
+  /// <param name="obstacles">List of obstacles</param>
+  /// <param name="level">Parent level</param>
+  /// <returns>End position node if a valid path was found, null otherwise</returns>
   private Node FindPath(Node start, Node end, List<Node> obstacles, Transform level) {
     var searchNodes = new List<Node>();
 
@@ -257,6 +293,13 @@ public class MapGenerator : MonoBehaviour {
     return null;
   }
 
+  /// <summary>
+  /// Create a new Game Object based on a Node reference
+  /// </summary>
+  /// <param name="node">Node reference</param>
+  /// <param name="prefab">Prefab to be created</param>
+  /// <param name="level">Level to parent the new Game Object</param>
+  /// <returns>GameObject reference</returns>
   private GameObject PlotNode(Node node, GameObject prefab, Transform level) {
     var item = Instantiate(prefab);
 
@@ -267,17 +310,33 @@ public class MapGenerator : MonoBehaviour {
     return item;
   }
 
+  /// <summary>
+  /// Represents a position on a grid/level, and it used to represent all elements of the Level
+  /// </summary>
   public class Node {
+
+    /// <summary>
+    /// Current GScore of this Node, used by the A* Path Finder
+    /// </summary>
     public float GScore { get; set; } = float.MaxValue;
+
+    /// <summary>
+    /// Parent Node of this node
+    /// </summary>
     public Node Parent { get; set; }
+
+    /// <summary>
+    /// Node position
+    /// </summary>
     public Vector2 Position { get; }
 
-    private static Vector2[] steps = new Vector2[]
+    // All possible moves 
+    private static readonly Vector2[] steps = new Vector2[]
     {
-            Vector2.up,
-            Vector2.left,
-            Vector2.down,
-            Vector2.right
+      Vector2.up,
+      Vector2.left,
+      Vector2.down,
+      Vector2.right
     };
 
     public Node(Node parent, Vector2 position) {
@@ -285,15 +344,37 @@ public class MapGenerator : MonoBehaviour {
       this.Position = position;
     }
 
+    /// <summary>
+    /// Calculate the total score of this node considering a Target Node.
+    /// Used by the A* path finder
+    /// </summary>
+    /// <param name="targetNode">Target Node</param>
+    /// <returns>A* Total Score</returns>
     public float TotalScore(Node targetNode) => GScore + Distance(targetNode);
+
+    /// <summary>
+    /// Calculate the Manhattan Distance between this node and another node
+    /// </summary>
+    /// <param name="otherNode">Other node to check the distance</param>
+    /// <returns>Manhattan Distance</returns>
     public float Distance(Node otherNode) => Mathf.Abs(this.Position.x - otherNode.Position.x) + Mathf.Abs(this.Position.y - otherNode.Position.y);
 
+    /// <summary>
+    /// Get the list nodes around this Node
+    /// </summary>
+    /// <returns>Enumerable list of Nodes in the neighborhood of this Node</returns>
     public IEnumerable<Node> Neighboors() {
       foreach (var step in steps) {
         yield return new Node(this, this.Position + step);
       }
     }
 
+    /// <summary>
+    /// Check if the Node is out of bounds
+    /// </summary>
+    /// <param name="horizontalBounds">Horizontal bounds</param>
+    /// <param name="verticalBounds">Vertical bounds</param>
+    /// <returns>True if not out of bounds, false otherwise</returns>
     public bool CheckBound(Vector2 horizontalBounds, Vector2 verticalBounds) {
       if (this.Position.x < horizontalBounds.x || this.Position.x > horizontalBounds.y) {
         return false;
