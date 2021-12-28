@@ -29,23 +29,6 @@ public class MapGenerator : MonoBehaviour {
   }
 
   /// <summary>
-  /// Destroy all sub-levels and reset Starting Point
-  /// </summary>
-  public void CleanLevels() {
-    var tempArray = new GameObject[LevelContainer.childCount];
-
-    for (int i = 0; i < tempArray.Length; i++) {
-      tempArray[i] = LevelContainer.GetChild(i).gameObject;
-    }
-
-    foreach (var child in tempArray) {
-      DestroyImmediate(child);
-    }
-
-    StartingPoint = null;
-  }
-
-  /// <summary>
   /// Generate a new complete Level
   /// </summary>
   /// <param name="numberOfObstacles">Max number of obstacles per sub-level</param>
@@ -90,7 +73,7 @@ public class MapGenerator : MonoBehaviour {
 
         var current = newEndNode;
         while (current != null) {
-          // PlotNode(current, PrefabVisited, level);
+          InstantiateNode(current, PrefabVisited, level);
 
           var dir1 = GetMoveVector(current);
           var dir2 = GetMoveVector(current.Parent);
@@ -115,16 +98,6 @@ public class MapGenerator : MonoBehaviour {
     }
 
     return true;
-  }
-
-  private Vector2 GetMoveVector(Node node) {
-
-    if (node != null) {
-      var parentPosition = node.Parent != null ? node.Parent.Position : node.Position + Vector2.left;
-      return (parentPosition - node.Position).normalized;
-    }
-
-    return Vector2.right.normalized;
   }
 
   /// <summary>
@@ -153,6 +126,23 @@ public class MapGenerator : MonoBehaviour {
     }
 
     return levels;
+  }
+
+  /// <summary>
+  /// Destroy all sub-levels and reset Starting Point
+  /// </summary>
+  public void CleanLevels() {
+    var tempArray = new GameObject[LevelContainer.childCount];
+
+    for (int i = 0; i < tempArray.Length; i++) {
+      tempArray[i] = LevelContainer.GetChild(i).gameObject;
+    }
+
+    foreach (var child in tempArray) {
+      DestroyImmediate(child);
+    }
+
+    StartingPoint = null;
   }
 
   /// <summary>
@@ -237,7 +227,7 @@ public class MapGenerator : MonoBehaviour {
 
     var passageStart = new Node(null, startNode.Position + Vector2.left);
     var passageEnd = new Node(null, endNode.Position + Vector2.right);
-    
+
     for (int i = Mathf.RoundToInt(VerticalLimits.x); i <= Mathf.RoundToInt(VerticalLimits.y); i++) {
 
       var obstacleLeft = new Node(null, new Vector2(Mathf.RoundToInt(HorizontalLimits.x) - 1, i));
@@ -324,6 +314,21 @@ public class MapGenerator : MonoBehaviour {
     }
 
     return null;
+  }
+
+  /// <summary>
+  /// Get the Move vector direction based on a Note and its parent
+  /// </summary>
+  /// <param name="node">Node to check the direction</param>
+  /// <returns>Vector Direction</returns>
+  private Vector2 GetMoveVector(Node node) {
+
+    if (node != null) {
+      var parentPosition = node.Parent != null ? node.Parent.Position : node.Position + Vector2.left;
+      return (parentPosition - node.Position).normalized;
+    }
+
+    return Vector2.right.normalized;
   }
 
   /// <summary>
