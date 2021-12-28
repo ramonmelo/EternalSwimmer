@@ -63,12 +63,10 @@ public class GameManager : MonoBehaviour {
 
     var map = level.GetComponent<MapGenerator>();
 
-    map.CleanLevels();
-    map.Setup(numberOfObstacles, numberOfLevels);
-
-    while (map.Generate() == false) {
-      Debug.LogError("Regenerating map...");
-    }
+    do {
+      map.CleanLevels();
+      Debug.Log("Generating map...");
+    } while (map.Generate(numberOfObstacles, numberOfLevels) == false);
 
     return level;
   }
