@@ -22,7 +22,7 @@ public class MapGenerator : MonoBehaviour {
   private LevelManager _levelManager;
   private readonly Vector2 HorizontalLimits = new Vector2(-4, 4);
   private readonly Vector2 VerticalLimits = new Vector2(1, 18);
-  private Transform[] Levels;
+  private SubLevel[] SubLevels;
 
   void Awake() {
     _levelManager = GetComponent<LevelManager>();
@@ -41,7 +41,7 @@ public class MapGenerator : MonoBehaviour {
     numberOfLevels = Mathf.Clamp(numberOfLevels, 1, GameConstants.MAX_SUB_LEVELS);
 
     // Create sub-levels
-    Levels = SetupLevels(numberOfLevels, LevelContainer);
+    SubLevels = SetupLevels(numberOfLevels, LevelContainer);
 
     // Store last start and end position
     Node endNode = null;
@@ -49,7 +49,7 @@ public class MapGenerator : MonoBehaviour {
     StartingPoint = null;
 
     // Generate each sub-level
-    foreach (var level in Levels) {
+    foreach (var level in SubLevels) {
 
       // Get start, end positions
       (startNode, endNode) = GenerateEndPoints(HorizontalLimits, VerticalLimits, endNode);
@@ -59,21 +59,21 @@ public class MapGenerator : MonoBehaviour {
         StartingPoint = startNode;
       }
 
-      InstantiateNode(startNode, PrefabPlayerEnter, level);
-      InstantiateNode(endNode, PrefabPlayerExit, level).GetComponent<MoverController>().Setup(_levelManager);
+      InstantiateNode(startNode, PrefabPlayerEnter, level.Level);
+      InstantiateNode(endNode, PrefabPlayerExit, level.Level).GetComponent<MoverController>().Setup(_levelManager);
 
-      var obstacles = new List<Node>();
+      level.Obstacles = new List<Node>();
 
-      GenerateWalls(obstacles, startNode, endNode, level);
-      GenerateObstacles(obstacles, startNode, endNode, numberOfObstacles, level, HorizontalLimits, VerticalLimits);
+      GenerateWalls(level.Obstacles, startNode, endNode, level.Level);
+      GenerateObstacles(level.Obstacles, startNode, endNode, numberOfObstacles, level.Level, HorizontalLimits, VerticalLimits);
 
-      var newEndNode = FindPath(startNode, endNode, obstacles, level);
+      var newEndNode = FindPath(startNode, endNode, level.Obstacles, level.Level);
 
       if (newEndNode != null) {
 
         var current = newEndNode;
         while (current != null) {
-          InstantiateNode(current, PrefabVisited, level);
+          InstantiateNode(current, PrefabVisited, level.Level);
 
           var dir1 = GetMoveVector(current);
           var dir2 = GetMoveVector(current.Parent);
@@ -84,9 +84,9 @@ public class MapGenerator : MonoBehaviour {
             var newPos = current.Parent.Position - dir2;
             var obstacle = new Node(null, newPos);
 
-            if (obstacles.Contains(obstacle) == false) {
+            if (level.Obstacles.Contains(obstacle) == false) {
 
-              InstantiateNode(obstacle, PrefabBlock, level);
+              InstantiateNode(obstacle, PrefabBlock, level.Level);
             }
           }
 
@@ -103,10 +103,10 @@ public class MapGenerator : MonoBehaviour {
   /// <summary>
   /// Create all sub-levels
   /// </summary>
-  private Transform[] SetupLevels(int numberOfLevels, Transform parentContainer) {
+  private SubLevel[] SetupLevels(int numberOfLevels, Transform parentContainer) {
     CleanLevels();
 
-    var levels = new Transform[numberOfLevels];
+    var levels = new SubLevel[numberOfLevels];
 
     var diff = 20;
 
@@ -122,7 +122,7 @@ public class MapGenerator : MonoBehaviour {
       levelContainer.transform.localPosition = new Vector3(0, 0, -diff);
       levelContainer.transform.localRotation = Quaternion.identity;
 
-      levels[i] = levelContainer.transform;
+      levels[i].Level = levelContainer.transform;
     }
 
     return levels;
@@ -346,6 +346,11 @@ public class MapGenerator : MonoBehaviour {
     item.transform.localRotation = level.localRotation;
 
     return item;
+  }
+
+  public class SubLevel {
+    public Transform Level;
+    public List<Node> Obstacles;
   }
 
   /// <summary>
