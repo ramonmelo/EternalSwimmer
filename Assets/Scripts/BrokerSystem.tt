@@ -7,7 +7,6 @@
 <#
 	var events = new List<string>();
 	events.Add("StartGame");
-	events.Add("EndGame");
 #>
 using System;
 using UnityEngine;
