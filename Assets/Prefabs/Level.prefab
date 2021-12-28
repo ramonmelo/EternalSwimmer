@@ -23,8 +23,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3411313337781598939}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: 0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -20}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 7816323460008908428}
@@ -94,8 +94,6 @@ MonoBehaviour:
   PrefabBlock: {fileID: 4622782972673133629, guid: 92e94540ffec44d419183c02d705500a, type: 3}
   PrefabVisited: {fileID: 399429021507987195, guid: a6af8bb0ff8944943b96ca747e570656, type: 3}
   LevelContainer: {fileID: 3621745899053822254}
-  ForwardChance: {x: 0, y: 0.5}
-  TurnChance: {x: 0.5, y: 0.9}
-  TerminateChance: {x: 0.9, y: 1}
-  TotalObstacles: 1
-  NumberOfSubLevels: 1
+  TotalObstacles: 10
+  NumberOfSubLevels: 12
+  _levelManager: {fileID: 7816323460008908429}
