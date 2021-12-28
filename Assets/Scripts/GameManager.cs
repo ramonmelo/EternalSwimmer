@@ -1,23 +1,29 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Responsible for running the game, building new levels and advancing the game
+/// </summary>
 public class GameManager : MonoBehaviour {
+
+  // Level Prefab
   [SerializeField] private LevelManager _levelContainer;
+
+  // Player Prefab
   [SerializeField] private PlayerController _playerPrefab;
 
-  private MapGenerator _mapGenerator;
   private PlayerController _localPlayer;
 
+  // Level references
   private LevelManager _levelOld;
   private LevelManager _levelCurrent;
   private LevelManager _levelNext;
 
+  // Level positions
   private readonly Vector3 LEVEL_POSITION_OLD = new Vector3(0, 20, 20);
   private readonly Vector3 LEVEL_POSITION_CURRENT = new Vector3(0, 0, 20);
   private readonly Vector3 LEVEL_POSITION_NEXT = new Vector3(0, -20, 20);
 
-  void Start() {
+  private void Start() {
     StartGame();
   }
 
@@ -26,6 +32,8 @@ public class GameManager : MonoBehaviour {
   /// Also spawns the player into the game world
   /// </summary>
   private void StartGame() {
+
+    Debug.Log("Starting a new Game.");
 
     Destroy(_levelOld);
     Destroy(_levelCurrent);
