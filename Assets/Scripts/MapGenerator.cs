@@ -408,8 +408,17 @@ public class MapGenerator : MonoBehaviour {
     /// <returns>Enumerable list of Nodes in the neighborhood of this Node</returns>
     public IEnumerable<Node> Neighboors() {
       foreach (var step in steps) {
-        yield return new Node(this, this.Position + step);
+        yield return Move(step);
       }
+    }
+
+    /// <summary>
+    /// Create a new Node by moving the current Node
+    /// </summary>
+    /// <param name="dir">Direction to Move</param>
+    /// <returns>New Node reference using the current Node as parent</returns>
+    public Node Move(Vector2 dir) {
+      return new Node(this, this.Position + dir);
     }
 
     /// <summary>
