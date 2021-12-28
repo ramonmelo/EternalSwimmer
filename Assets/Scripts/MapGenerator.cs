@@ -2,33 +2,35 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Responsible by creating a new complete Level based on some settings
+/// </summary>
 public class MapGenerator : MonoBehaviour {
+
+  /// <summary>
+  /// Starting Position of the first Level
+  /// </summary>
+  public Node StartingPoint { get; private set; } = null;
+
   [SerializeField] private GameObject PrefabPlayerEnter;
   [SerializeField] private GameObject PrefabPlayerExit;
   [SerializeField] private GameObject PrefabPoint;
   [SerializeField] private GameObject PrefabBlock;
   [SerializeField] private GameObject PrefabVisited;
   [SerializeField] private Transform LevelContainer;
-  [SerializeField, Range(1, 25)] private int TotalObstacles = 10;
-  [SerializeField, Range(1, 12)] private int NumberOfSubLevels = 1;
 
-  private Vector2 HorizontalLimits = new Vector2(-4, 4);
-  private Vector2 VerticalLimits = new Vector2(1, 18);
+  private LevelManager _levelManager;
+  private readonly Vector2 HorizontalLimits = new Vector2(-4, 4);
+  private readonly Vector2 VerticalLimits = new Vector2(1, 18);
   private Transform[] Levels;
 
-  public Node StartingPoint { get; private set; } = null;
-
-  public LevelManager _levelManager;
-
   void Awake() {
-    _levelManager = GetComponentInParent<LevelManager>();
+    _levelManager = GetComponent<LevelManager>();
   }
 
-  public void Setup(int numberOfObstacles, int numberOfLevels) {
-    this.TotalObstacles = Mathf.Clamp(numberOfObstacles, 1, 25);
-    this.NumberOfSubLevels = Mathf.Clamp(numberOfLevels, 1, 12);
-  }
-
+  /// <summary>
+  /// Destroy all sub-levels and reset Starting Point
+  /// </summary>
   public void CleanLevels() {
     var tempArray = new GameObject[LevelContainer.childCount];
 
@@ -43,27 +45,44 @@ public class MapGenerator : MonoBehaviour {
     StartingPoint = null;
   }
 
-  public bool Generate() {
-    Levels = SetupLevels(NumberOfSubLevels, LevelContainer);
+  /// <summary>
+  /// Generate a new complete Level
+  /// </summary>
+  /// <param name="numberOfObstacles">Max number of obstacles per sub-level</param>
+  /// <param name="numberOfLevels">Number of sub-levels to be created</param>
+  /// <returns>True if a valid level was create, false otherwise</returns>
+  public bool Generate(int numberOfObstacles = GameConstants.MAX_OBSTACLES_PER_LEVEL, int numberOfLevels = GameConstants.MAX_SUB_LEVELS) {
 
-    // Generate
+    // Check limits
+    numberOfObstacles = Mathf.Clamp(numberOfObstacles, 1, GameConstants.MAX_OBSTACLES_PER_LEVEL);
+    numberOfLevels = Mathf.Clamp(numberOfLevels, 1, GameConstants.MAX_SUB_LEVELS);
+
+    // Create sub-levels
+    Levels = SetupLevels(numberOfLevels, LevelContainer);
+
+    // Store last start and end position
     Node endNode = null;
+    Node startNode = null;
+    StartingPoint = null;
 
+    // Generate each sub-level
     foreach (var level in Levels) {
-      Node startNode;
+
+      // Get start, end positions
       (startNode, endNode) = GenerateEndPoints(HorizontalLimits, VerticalLimits, endNode);
 
+      // Store first start position
       if (StartingPoint == null) {
         StartingPoint = startNode;
       }
 
-      PlotNode(startNode, PrefabPlayerEnter, level);
-      PlotNode(endNode, PrefabPlayerExit, level).GetComponent<MoverController>().Setup(_levelManager);
+      InstantiateNode(startNode, PrefabPlayerEnter, level);
+      InstantiateNode(endNode, PrefabPlayerExit, level).GetComponent<MoverController>().Setup(_levelManager);
 
       var obstacles = new List<Node>();
 
       GenerateWalls(obstacles, startNode, endNode, level);
-      GenerateObstacles(obstacles, startNode, endNode, TotalObstacles, level, HorizontalLimits, VerticalLimits);
+      GenerateObstacles(obstacles, startNode, endNode, numberOfObstacles, level, HorizontalLimits, VerticalLimits);
 
       var newEndNode = FindPath(startNode, endNode, obstacles, level);
 
@@ -84,7 +103,7 @@ public class MapGenerator : MonoBehaviour {
 
             if (obstacles.Contains(obstacle) == false) {
 
-              PlotNode(obstacle, PrefabBlock, level);
+              InstantiateNode(obstacle, PrefabBlock, level);
             }
           }
 
@@ -187,7 +206,7 @@ public class MapGenerator : MonoBehaviour {
       if (obstacles.Contains(obstacle) == false && obstacle.Distance(startNode) > 2 && obstacle.Distance(endNode) > 2) {
         obstacles.Add(obstacle);
 
-        PlotNode(obstacle, PrefabBlock, level);
+        InstantiateNode(obstacle, PrefabBlock, level);
       } else {
         attempts--;
       }
@@ -203,35 +222,49 @@ public class MapGenerator : MonoBehaviour {
   /// <param name="level">Parent level</param>
   private void GenerateWalls(List<Node> obstacles, Node startNode, Node endNode, Transform level) {
 
-    var passageEnter = new Node(null, startNode.Position + Vector2.left);
-    var passageExit = new Node(null, endNode.Position + Vector2.right);
+    // Build start and end blocking walls
 
+    var blockStart = new Node(null, startNode.Position + Vector2.right);
+    var blockEnd = new Node(null, endNode.Position + Vector2.left);
+
+    InstantiateNode(blockStart, PrefabBlock, level);
+    obstacles.Add(blockStart);
+
+    InstantiateNode(blockEnd, PrefabBlock, level);
+    obstacles.Add(blockEnd);
+
+    // Build vertical obstacles
+
+    var passageStart = new Node(null, startNode.Position + Vector2.left);
+    var passageEnd = new Node(null, endNode.Position + Vector2.right);
+    
     for (int i = Mathf.RoundToInt(VerticalLimits.x); i <= Mathf.RoundToInt(VerticalLimits.y); i++) {
 
       var obstacleLeft = new Node(null, new Vector2(Mathf.RoundToInt(HorizontalLimits.x) - 1, i));
 
-      if (obstacleLeft.Equals(passageEnter) == false) {
+      if (obstacleLeft.Equals(passageStart) == false) {
 
-        PlotNode(obstacleLeft, PrefabBlock, level);
+        InstantiateNode(obstacleLeft, PrefabBlock, level);
         obstacles.Add(obstacleLeft);
       }
 
       var obstacleRight = new Node(null, new Vector2(Mathf.RoundToInt(HorizontalLimits.y) + 1, i));
 
-      if (obstacleRight.Equals(passageExit) == false) {
+      if (obstacleRight.Equals(passageEnd) == false) {
 
-        PlotNode(obstacleRight, PrefabBlock, level);
+        InstantiateNode(obstacleRight, PrefabBlock, level);
         obstacles.Add(obstacleRight);
       }
     }
 
+    // Build horizontal obstacles
     for (int i = Mathf.RoundToInt(HorizontalLimits.x) - 1; i <= Mathf.RoundToInt(HorizontalLimits.y) + 1; i++) {
 
       var obstacleTop = new Node(null, new Vector2(i, Mathf.RoundToInt(VerticalLimits.y) + 1));
       var obstacleBottom = new Node(null, new Vector2(i, Mathf.RoundToInt(VerticalLimits.x) - 1));
 
-      PlotNode(obstacleTop, PrefabBlock, level);
-      PlotNode(obstacleBottom, PrefabBlock, level);
+      InstantiateNode(obstacleTop, PrefabBlock, level);
+      InstantiateNode(obstacleBottom, PrefabBlock, level);
 
       obstacles.Add(obstacleTop);
       obstacles.Add(obstacleBottom);
@@ -300,7 +333,7 @@ public class MapGenerator : MonoBehaviour {
   /// <param name="prefab">Prefab to be created</param>
   /// <param name="level">Level to parent the new Game Object</param>
   /// <returns>GameObject reference</returns>
-  private GameObject PlotNode(Node node, GameObject prefab, Transform level) {
+  private GameObject InstantiateNode(Node node, GameObject prefab, Transform level) {
     var item = Instantiate(prefab);
 
     item.transform.SetParent(level);
