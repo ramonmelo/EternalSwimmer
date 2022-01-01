@@ -10,7 +10,7 @@ public class MapGeneratorEditor : Editor
 
         if (GUILayout.Button("Generate Map"))
         {
-            (target as MapGenerator).Generate();
+            (target as MapGenerator).GenerateLevels(1, 3);
         }
 
         if (GUILayout.Button("Clean Map"))

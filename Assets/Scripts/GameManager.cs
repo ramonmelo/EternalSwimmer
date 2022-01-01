@@ -41,8 +41,8 @@ public class GameManager : MonoBehaviour {
     Destroy(_localPlayer);
 
     _levelOld = null;
-    _levelCurrent = BuildLevel(25, 12, LEVEL_POSITION_CURRENT);
-    _levelNext = BuildLevel(25, 12, LEVEL_POSITION_NEXT);
+    _levelCurrent = BuildLevel(25, 1, LEVEL_POSITION_CURRENT);
+    //_levelNext = BuildLevel(25, 12, LEVEL_POSITION_NEXT);
 
     var startPos = _levelCurrent.GetComponent<MapGenerator>().StartingPoint;
 
@@ -66,7 +66,7 @@ public class GameManager : MonoBehaviour {
     do {
       map.CleanLevels();
       Debug.Log("Generating map...");
-    } while (map.Generate(numberOfObstacles, numberOfLevels) == false);
+    } while (map.GenerateLevels(numberOfObstacles, numberOfLevels) == false);
 
     return level;
   }

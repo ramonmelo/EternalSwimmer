@@ -12,10 +12,10 @@ public class MoverController : MonoBehaviour {
   }
 
   private void Update() {
-    if (_player != null && _levelManager.IsMoving == false) {
-      _player.Unlock();
-      _player = null;
-    }
+    //if (_player != null && _levelManager.IsMoving == false) {
+    //  _player.Unlock();
+    //  _player = null;
+    //}
   }
 
   private void OnTriggerEnter(Collider other) {

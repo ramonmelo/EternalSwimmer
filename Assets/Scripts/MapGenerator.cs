@@ -12,6 +12,11 @@ public class MapGenerator : MonoBehaviour {
   /// </summary>
   public Node StartingPoint { get; private set; } = null;
 
+  /// <summary>
+  /// List of SubLevels
+  /// </summary>
+  public SubLevel[] SubLevels { get; private set; } = null;
+
   [SerializeField] private GameObject PrefabPlayerEnter;
   [SerializeField] private GameObject PrefabPlayerExit;
   [SerializeField] private GameObject PrefabPoint;
@@ -22,10 +27,23 @@ public class MapGenerator : MonoBehaviour {
   private LevelManager _levelManager;
   private readonly Vector2 HorizontalLimits = new Vector2(-4, 4);
   private readonly Vector2 VerticalLimits = new Vector2(1, 18);
-  private SubLevel[] SubLevels;
 
   void Awake() {
     _levelManager = GetComponent<LevelManager>();
+  }
+
+  public Node GeneratePath(SubLevel level, Node startNode, Vector2 dir) {
+
+    var currentPos = startNode.Clone();
+    var targetPos = currentPos;
+
+    do {
+      currentPos = targetPos;
+      targetPos = currentPos.Move(dir);
+
+    } while (level.Obstacles.Contains(targetPos) == false);
+
+    return currentPos;
   }
 
   /// <summary>
@@ -34,7 +52,7 @@ public class MapGenerator : MonoBehaviour {
   /// <param name="numberOfObstacles">Max number of obstacles per sub-level</param>
   /// <param name="numberOfLevels">Number of sub-levels to be created</param>
   /// <returns>True if a valid level was create, false otherwise</returns>
-  public bool Generate(int numberOfObstacles = GameConstants.MAX_OBSTACLES_PER_LEVEL, int numberOfLevels = GameConstants.MAX_SUB_LEVELS) {
+  public bool GenerateLevels(int numberOfObstacles = GameConstants.MAX_OBSTACLES_PER_LEVEL, int numberOfLevels = GameConstants.MAX_SUB_LEVELS) {
 
     // Check limits
     numberOfObstacles = Mathf.Clamp(numberOfObstacles, 1, GameConstants.MAX_OBSTACLES_PER_LEVEL);
@@ -108,7 +126,10 @@ public class MapGenerator : MonoBehaviour {
 
     var levels = new SubLevel[numberOfLevels];
 
-    var diff = 20;
+    var diff = numberOfLevels * 1.2f; // 1.66
+    var diffAngle = 360f / numberOfLevels;
+
+    parentContainer.localPosition = new Vector3(0, 0, -diff);
 
     for (int i = 0; i < numberOfLevels; i++) {
       var level = new GameObject($"Level_{i}");
@@ -116,13 +137,15 @@ public class MapGenerator : MonoBehaviour {
 
       level.transform.SetParent(parentContainer);
       level.transform.localPosition = new Vector3(0, 0, diff);
-      level.transform.localRotation = Quaternion.AngleAxis(-30 * i, Vector3.up);
+      level.transform.localRotation = Quaternion.AngleAxis(-diffAngle * i, Vector3.up);
 
       levelContainer.transform.SetParent(level.transform);
       levelContainer.transform.localPosition = new Vector3(0, 0, -diff);
       levelContainer.transform.localRotation = Quaternion.identity;
 
-      levels[i].Level = levelContainer.transform;
+      levels[i] = new SubLevel {
+        Level = levelContainer.transform
+      };
     }
 
     return levels;
