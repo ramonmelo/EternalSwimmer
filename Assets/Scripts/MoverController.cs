@@ -4,12 +4,7 @@ using UnityEngine;
 
 public class MoverController : MonoBehaviour {
 
-  private LevelManager _levelManager;
-  private PlayerController _player;
-
-  public void Setup(LevelManager levelManager) {
-    this._levelManager = levelManager;
-  }
+  //private PlayerController _player;
 
   private void Update() {
     //if (_player != null && _levelManager.IsMoving == false) {
@@ -19,16 +14,16 @@ public class MoverController : MonoBehaviour {
   }
 
   private void OnTriggerEnter(Collider other) {
-    if (other.transform.CompareTag("Player")) {
-      var pos = Camera.main.WorldToScreenPoint(transform.position);
+    //if (other.transform.CompareTag("Player")) {
+    //  var pos = Camera.main.WorldToScreenPoint(transform.position);
 
-      if (pos.x < Screen.width / 2) {
-        _levelManager.RotateRight();
-      } else {
-        _levelManager.RotateLeft();
-      }
+    //  if (pos.x < Screen.width / 2) {
+    //    //_levelManager.RotateRight();
+    //  } else {
+    //    //_levelManager.RotateLeft();
+    //  }
 
-      _player = other.gameObject.GetComponent<PlayerController>();
-    }
+    //  _player = other.gameObject.GetComponent<PlayerController>();
+    //}
   }
 }

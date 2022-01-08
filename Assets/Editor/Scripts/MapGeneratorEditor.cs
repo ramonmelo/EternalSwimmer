@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(MapGenerator))]
+[CustomEditor(typeof(Level))]
 public class MapGeneratorEditor : Editor
 {
     public override void OnInspectorGUI()
@@ -10,12 +10,12 @@ public class MapGeneratorEditor : Editor
 
         if (GUILayout.Button("Generate Map"))
         {
-            (target as MapGenerator).GenerateLevels(1, 3);
+            (target as Level).GenerateLevels(1, 3);
         }
 
         if (GUILayout.Button("Clean Map"))
         {
-            (target as MapGenerator).CleanLevels();
+            (target as Level).CleanLevels();
         }
     }
 }

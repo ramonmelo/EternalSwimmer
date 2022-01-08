@@ -8,11 +8,11 @@ public class PlayerController : MonoBehaviour {
   [SerializeField] private float Speed;
   [SerializeField] private Animator Animator;
 
-  private Vector3 _direction = Vector3.zero;
-  private Vector3 _lastDir = Vector3.zero;
-  private Transform _movingTransform;
-  private float _animationState = 0;
-  private float _animationStateTarget = 0;
+  //private Vector3 _direction = Vector3.zero;
+  //private Vector3 _lastDir = Vector3.zero;
+  //private Transform _movingTransform;
+  //private float _animationState = 0;
+  //private float _animationStateTarget = 0;
 
   void Update() {
     //if (_movingTransform == null) {
@@ -21,11 +21,11 @@ public class PlayerController : MonoBehaviour {
     //}
 
     // Update Visual Rotation
-    Visuals.rotation = Quaternion.LookRotation(Vector3.forward, _lastDir);
+    //Visuals.rotation = Quaternion.LookRotation(Vector3.forward, _lastDir);
 
     // Update Animation
-    _animationState = Mathf.MoveTowards(_animationState, _animationStateTarget, Time.deltaTime * 10f);
-    Animator.SetFloat("SwimmingState", _animationState);
+    //_animationState = Mathf.MoveTowards(_animationState, _animationStateTarget, Time.deltaTime * 10f);
+    //Animator.SetFloat("SwimmingState", _animationState);
   }
 
   private void LateUpdate() {
