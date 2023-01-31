@@ -30,7 +30,10 @@ public class Level : MonoBehaviour {
       currentPos = targetPos;
       targetPos = currentPos.Move(dir);
 
-    } while (level.Obstacles.Contains(targetPos) == false);
+    } while (
+      level.Obstacles.Contains(targetPos) == false &&
+      targetPos.CheckBound(HorizontalLimits, VerticalLimits)
+    );
 
     return currentPos;
   }

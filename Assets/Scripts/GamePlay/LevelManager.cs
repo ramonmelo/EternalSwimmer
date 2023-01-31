@@ -44,7 +44,7 @@ public class LevelManager : MonoBehaviour {
       case GameState.GENERATING_WORLD:
         break;
       case GameState.START_GAME:
-        Debug.Log($"Level Generated. Starting position: {GetCurrentLevelEntryPoint().position}");
+        Debug.Log($"Level Generated. Starting position: {GetCurrentLevelEntryPoint().WorldRepresentation.position}");
         break;
       case GameState.NEXT_SUBLEVEL:
         break;
@@ -57,10 +57,15 @@ public class LevelManager : MonoBehaviour {
     }
   }
 
-  public Transform GetCurrentLevelEntryPoint() {
+  public Level.Node GetCurrentLevelEntryPoint() {
     Assert.IsTrue(_levelCurrent.SubLevels.Length > CurrentSubLevel);
 
-    return _levelCurrent.SubLevels[CurrentSubLevel].startNode.WorldRepresentation;
+    return _levelCurrent.SubLevels[CurrentSubLevel].startNode;
+  }
+
+  public Level.Node ComputePath(Level.Node startPos, Vector2 dir) {
+
+    return _levelCurrent.GeneratePath(_levelCurrent.SubLevels[CurrentSubLevel], startPos, dir);
   }
 
   /// <summary>

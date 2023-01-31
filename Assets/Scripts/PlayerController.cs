@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class PlayerController : MonoBehaviour {
 
@@ -8,13 +9,31 @@ public class PlayerController : MonoBehaviour {
   [SerializeField] private float Speed;
   [SerializeField] private Animator Animator;
 
+  public Level.Node CurrentNodePosition { get; set; }
+
   //private Vector3 _direction = Vector3.zero;
   //private Vector3 _lastDir = Vector3.zero;
   //private Transform _movingTransform;
   //private float _animationState = 0;
   //private float _animationStateTarget = 0;
 
+  private bool _isMoving = false;
+
   void Update() {
+
+    if (_isMoving == false) {
+
+      var moveDir = GetInputDir();
+
+      if (moveDir != Vector2.zero) {
+
+        var targetNode = LevelManager.Instance.ComputePath(CurrentNodePosition, moveDir);
+        var targetPosition = new Vector3(targetNode.Position.x, targetNode.Position.y, transform.position.z);
+
+        transform.DOMove(targetPosition, 1);
+      }
+    }
+
     //if (_movingTransform == null) {
     //  UpdateDirection();
     //  Move();
@@ -38,30 +57,23 @@ public class PlayerController : MonoBehaviour {
   //  transform.Translate(_direction * Speed * Time.deltaTime, Space.World);
   //}
 
-  //private void UpdateDirection() {
-  //  if (_direction != Vector3.zero) {
-  //    _lastDir = _direction;
-  //    _animationStateTarget = 1;
+  private Vector2 GetInputDir() {
 
-  //    // Ignore until is zero again
-  //    return;
-  //  } else {
-  //    _animationStateTarget = 0;
-  //  }
+    if (Input.GetKeyDown(KeyCode.UpArrow)) {
+      return Vector2.up;
+    }
+    if (Input.GetKeyDown(KeyCode.DownArrow)) {
+      return Vector2.down;
+    }
+    if (Input.GetKeyDown(KeyCode.LeftArrow)) {
+      return Vector2.left;
+    }
+    if (Input.GetKeyDown(KeyCode.RightArrow)) {
+      return Vector2.right;
+    }
 
-  //  if (Input.GetKeyDown(KeyCode.UpArrow)) {
-  //    _direction = Vector3.up;
-  //  }
-  //  if (Input.GetKeyDown(KeyCode.DownArrow)) {
-  //    _direction = Vector3.down;
-  //  }
-  //  if (Input.GetKeyDown(KeyCode.LeftArrow)) {
-  //    _direction = Vector3.left;
-  //  }
-  //  if (Input.GetKeyDown(KeyCode.RightArrow)) {
-  //    _direction = Vector3.right;
-  //  }
-  //}
+    return Vector2.zero;
+  }
 
   //private void OnCollisionEnter(Collision collision) {
   //  Stop();

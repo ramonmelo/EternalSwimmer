@@ -38,6 +38,9 @@ public class PlayerManager : MonoBehaviour {
   private void SpawnPlayer() {
     var pos = LevelManager.Instance.GetCurrentLevelEntryPoint();
 
-    _localPlayer = Instantiate(_playerPrefab, pos.position, Quaternion.identity);
+    _localPlayer = Instantiate(_playerPrefab, pos.WorldRepresentation.position, Quaternion.identity);
+    _localPlayer.CurrentNodePosition = pos;
+
+    Debug.Log($"Spawn Player at {pos}");
   }
 }
